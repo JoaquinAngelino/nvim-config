@@ -5,7 +5,6 @@ require("config.mappings")
 require("config.lualine")
 require("config.luasnip")
 require("config.terminal")
-require("config.jdtls")
 
 -- disable netrw at the very start of your init.lua
 vim.g.loaded_netrw = 1
