@@ -24,10 +24,11 @@ vim.keymap.set('n', '<S-Tab>', ':bprevious<CR>', { silent = true })
 vim.keymap.set('n', '<C-u>', '<C-u>zz')
 vim.keymap.set('n', '<C-d>', '<C-d>zz')
 
-vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true })
+vim.keymap.set({ 'n', 'v', 'i' }, '<C-s>', ':w<CR>', { silent = true })
 vim.keymap.set('n', '<leader>w', ':bd<CR>', { silent = true, noremap = true })
 
 vim.keymap.set({ 'n', 'v' }, '<leader>e', ':NvimTreeToggle<CR>', { silent = true, noremap = true })
+vim.api.nvim_set_keymap('n', '<leader>r', ':NvimTreeChangeRootToNode<CR>', { noremap = true, silent = true })
 
 vim.api.nvim_set_keymap('n', '<leader>dn', '<cmd>lua vim.diagnostic.goto_next()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>dp', '<cmd>lua vim.diagnostic.goto_prev()<CR>', { noremap = true, silent = true })

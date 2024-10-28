@@ -5,7 +5,7 @@ return {
     local lspconfig = require('lspconfig')
 
     -- Define `on_attach` function for keybindings and other settings
-    local on_attach = function(client, bufnr)
+    local on_attach = function(_, bufnr)
       local buf_map = function(mode, lhs, rhs)
         local opts = { noremap = true, silent = true, buffer = bufnr }
         vim.keymap.set(mode, lhs, rhs, opts)
