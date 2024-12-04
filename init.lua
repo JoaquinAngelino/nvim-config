@@ -1,11 +1,16 @@
 require("config.init")
 
-vim.cmd("set noswapfile")
-vim.cmd("set expandtab")
-vim.cmd("set tabstop=4")
-vim.cmd("set softtabstop=4")
-vim.cmd("set shiftwidth=4")
-vim.cmd("set foldmethod=indent")
-vim.cmd("set foldlevel=99")
-vim.cmd("set foldenable")
+-- Disable swap file
+vim.opt.swapfile = false
+
+-- Tab and indentation settings
+vim.opt.expandtab = true
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+vim.opt.shiftwidth = 4
+
+-- Folding settings
+vim.opt.foldmethod = "indent"
+vim.opt.foldlevel = 99
+vim.opt.foldenable = true
 

@@ -1,9 +1,10 @@
 require("config.options")
 require("config.lazy")
-require("config.telescope")
-require("config.mappings")
 require("config.lualine")
 require("config.luasnip")
+require("config.mappings")
+require("config.tabnine")
+require("config.telescope")
 require("config.terminal")
 
 -- disable netrw at the very start of your init.lua
