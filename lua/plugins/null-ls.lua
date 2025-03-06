@@ -3,6 +3,7 @@ return {
   dependencies = { "nvim-lua/plenary.nvim" },
   config = function()
     local null_ls = require("null-ls")
+    local format_on_save_enabled = true     -- Add a flag to control format-on-save
 
     null_ls.setup({
       sources = {
@@ -34,10 +35,23 @@ return {
             group = augroup,
             buffer = bufnr,
             callback = function()
-              vim.lsp.buf.format({ bufnr = bufnr })
+              if format_on_save_enabled then
+                vim.lsp.buf.format({ bufnr = bufnr })
+              end
             end,
           })
         end
+
+        -- Add a keybinding to toggle format-on-save
+        vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>tf", "", {
+          callback = function()
+            format_on_save_enabled = not format_on_save_enabled
+            print("Format on save: " .. (format_on_save_enabled and "ENABLED" or "DISABLED"))
+          end,
+          noremap = true,
+          silent = true,
+          desc = "Toggle format on save",
+        })
       end,
     })
   end,
