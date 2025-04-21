@@ -50,3 +50,11 @@ vim.api.nvim_set_keymap('n', '<C-h>', '<C-w>h', { noremap = true, silent = true 
 vim.api.nvim_set_keymap('n', '<C-j>', '<C-w>j', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<C-k>', '<C-w>k', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<C-l>', '<C-w>l', { noremap = true, silent = true })
+
+-- Toggle Autoformat
+-- function ToggleAutoFormat()
+--     vim.g.disable_autoformat = not vim.g.disable_autoformat
+--     print("Autoformat: " .. (vim.g.disable_autoformat and "OFF" or "ON"))
+-- end
+--
+-- vim.api.nvim_set_keymap("n", "<leader>tf", ":lua ToggleAutoFormat()<CR>", { noremap = true, silent = true })
