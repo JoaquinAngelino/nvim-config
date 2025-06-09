@@ -57,3 +57,6 @@ vim.api.nvim_set_keymap("i", "<C-l>", 'copilot#Accept("<CR>")', {
     silent = true,
     noremap = true,
 })
+
+-- Map Alt+i to jump forward in the jump list
+vim.keymap.set("n", "<M-o>", "<C-i>", { noremap = true, silent = true })

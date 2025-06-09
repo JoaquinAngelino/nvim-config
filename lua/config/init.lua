@@ -4,7 +4,6 @@ require("config.lualine")
 require("config.luasnip")
 require("config.mappings")
 require("config.telescope")
-require("config.terminal")
 
 -- disable netrw at the very start of your init.lua
 vim.g.loaded_netrw = 1
