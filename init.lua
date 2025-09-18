@@ -11,5 +11,5 @@ vim.opt.shiftwidth = 4
 
 -- Folding settings
 vim.opt.foldmethod = "indent"
-vim.opt.foldlevelstart = 0
+vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true

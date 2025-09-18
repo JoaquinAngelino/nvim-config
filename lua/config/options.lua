@@ -5,7 +5,6 @@ vim.g.maplocalleader = "\\"
 -- Use system clipboard
 vim.o.clipboard = 'unnamedplus'
 
-
 -- - NEOVIM
 vim.opt.termguicolors = true -- enabled 24bit RGB color
 vim.opt.signcolumn = 'yes' -- always draw the sign column
