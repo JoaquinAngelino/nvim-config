@@ -12,7 +12,6 @@ vim.g.loaded_netrwPlugin = 1
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
 
--- OR setup with some options
 require("nvim-tree").setup({
     sort = {
         sorter = "case_sensitive",
@@ -27,7 +26,7 @@ require("nvim-tree").setup({
         dotfiles = false,
     },
     git = {
-        enable = true, -- Show git-ignored files by default
+        enable = true,
         ignore = false,
     }
 })
