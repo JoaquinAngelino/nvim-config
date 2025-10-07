@@ -22,7 +22,6 @@ return {
             kb.set('n', 'gr', function() vim.lsp.buf.references() end, vim.tbl_extend('force', opts, { desc = 'LSP: references' }))
             kb.set('n', 'K', function() vim.lsp.buf.hover() end, vim.tbl_extend('force', opts, { desc = 'LSP: hover' }))
             kb.set('n', '<F2>', function() vim.lsp.buf.rename() end, vim.tbl_extend('force', opts, { desc = 'LSP: rename' }))
-            kb.set('n', '<F12>', function() vim.lsp.buf.rename() end, vim.tbl_extend('force', opts, { desc = 'LSP: rename (F12)' }))
             kb.set('n', '<leader>ca', function() vim.lsp.buf.code_action() end, vim.tbl_extend('force', opts, { desc = 'LSP: code action' }))
             -- formatting: alt-shift-f can be unreliable in terminals, add a leader fallback
             kb.set('n', '<A-S-f>', function() vim.lsp.buf.format({ async = true }) end, vim.tbl_extend('force', opts, { desc = 'LSP: format (alt-shift-f)' }))
@@ -32,7 +31,7 @@ return {
             pcall(function()
                 local maps = vim.api.nvim_buf_get_keymap(bufnr, 'n')
                 for _, m in ipairs(maps) do
-                    if m.lhs and (m.lhs == 'gd' or m.lhs == 'gD' or m.lhs == 'gr' or m.lhs == 'K' or m.lhs == '<F2>' or m.lhs == '<F12>' or m.lhs == '<leader>ca' or m.lhs == '<leader>f') then
+                    if m.lhs and (m.lhs == 'gd' or m.lhs == 'gD' or m.lhs == 'gr' or m.lhs == 'K' or m.lhs == '<F2>' or m.lhs == '<leader>ca' or m.lhs == '<leader>f') then
                         log(string.format('map set: lhs=%s rhs=%s desc=%s', m.lhs, m.rhs or '<func>', tostring(m.desc)))
                     end
                 end

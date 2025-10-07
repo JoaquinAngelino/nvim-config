@@ -9,7 +9,6 @@ The LSP server configuration in `lua/plugins/lsp-config.lua` was not properly ca
 ## Changes made
 
 1. **Simplified LSP setup** - Removed complex branching logic for non-existent API and directly use the standard `lspconfig` module
-2. **Added F12 keybinding** - Added F12 as an alternative to F2 for rename (common IDE convention)
 3. **Consistent keybindings** - Applied same fix to both `lsp-config.lua` and `jdtls.lua`
 
 ## How to verify the fix
@@ -54,7 +53,7 @@ With your cursor on a symbol/function/variable:
 - **gD** - Go to declaration
 - **gr** - Show references (should show all places where symbol is used)
 - **K** - Show hover documentation
-- **F2** or **F12** - Rename symbol
+- **F2** - Rename symbol
 - **<leader>ca** - Show code actions (if your leader is Space, press Space then c then a)
 - **<leader>f** - Format the file
 
@@ -95,5 +94,5 @@ map set: lhs=gD rhs=<func> desc=LSP: go to declaration
 ## Expected behavior after fix
 
 1. When you open a supported file, the LSP server should automatically attach
-2. All keybindings (gd, gD, gr, K, F2, F12, <leader>ca, <leader>f) should work immediately
+2. All keybindings (gd, gD, gr, K, F2, <leader>ca, <leader>f) should work immediately
 3. The debug log should show the `on_attach` was called and mappings were set
