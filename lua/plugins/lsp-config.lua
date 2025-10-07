@@ -22,6 +22,7 @@ return {
             kb.set('n', 'gr', function() vim.lsp.buf.references() end, vim.tbl_extend('force', opts, { desc = 'LSP: references' }))
             kb.set('n', 'K', function() vim.lsp.buf.hover() end, vim.tbl_extend('force', opts, { desc = 'LSP: hover' }))
             kb.set('n', '<F2>', function() vim.lsp.buf.rename() end, vim.tbl_extend('force', opts, { desc = 'LSP: rename' }))
+            kb.set('n', '<F12>', function() vim.lsp.buf.rename() end, vim.tbl_extend('force', opts, { desc = 'LSP: rename (F12)' }))
             kb.set('n', '<leader>ca', function() vim.lsp.buf.code_action() end, vim.tbl_extend('force', opts, { desc = 'LSP: code action' }))
             -- formatting: alt-shift-f can be unreliable in terminals, add a leader fallback
             kb.set('n', '<A-S-f>', function() vim.lsp.buf.format({ async = true }) end, vim.tbl_extend('force', opts, { desc = 'LSP: format (alt-shift-f)' }))
@@ -31,7 +32,7 @@ return {
             pcall(function()
                 local maps = vim.api.nvim_buf_get_keymap(bufnr, 'n')
                 for _, m in ipairs(maps) do
-                    if m.lhs and (m.lhs == 'gd' or m.lhs == 'gD' or m.lhs == 'gr' or m.lhs == 'K' or m.lhs == '<F2>' or m.lhs == '<leader>ca' or m.lhs == '<leader>f') then
+                    if m.lhs and (m.lhs == 'gd' or m.lhs == 'gD' or m.lhs == 'gr' or m.lhs == 'K' or m.lhs == '<F2>' or m.lhs == '<F12>' or m.lhs == '<leader>ca' or m.lhs == '<leader>f') then
                         log(string.format('map set: lhs=%s rhs=%s desc=%s', m.lhs, m.rhs or '<func>', tostring(m.desc)))
                     end
                 end
@@ -87,81 +88,43 @@ return {
         -- `setup` can be a function used by some plugin wrappers. Leave nil to use defaults.
         setup = nil,
     },
-    -- Provide a safe config function so lazy.nvim won't try to call the plugin's
-    -- module 'setup' field (which changed in newer lspconfig versions).
     config = function(_, opts)
-        -- Prefer the new API if available
-        local use_new_api = vim and vim.lsp and vim.lsp.config
+        local ok, lspconfig = pcall(require, 'lspconfig')
+        if not ok or not lspconfig then
+            vim.notify('lspconfig not found', vim.log.levels.ERROR)
+            return
+        end
 
         local default_on_attach = opts.on_attach
 
-        if use_new_api then
-            for name, server_opts in pairs(opts.servers or {}) do
-                if name == 'tsserver' then
-                    name = 'ts_ls'
-                end
-
-                -- Ensure per-server on_attach runs the default on_attach first
-                server_opts = server_opts or {}
-                do
-                    local server_on_attach = server_opts.on_attach
-                    if default_on_attach then
-                        server_opts.on_attach = function(client, bufnr)
-                            default_on_attach(client, bufnr)
-                            if type(server_on_attach) == 'function' then
-                                server_on_attach(client, bufnr)
-                            end
-                        end
-                    else
-                        -- use server's own on_attach if present
-                        server_opts.on_attach = server_on_attach
-                    end
-                end
-
-                -- Register or setup using the new API
-                if vim.lsp.config[name] and type(vim.lsp.config[name].setup) == 'function' then
-                    vim.lsp.config[name].setup(server_opts)
-                else
-                    -- Fall back: try to register the server config table
-                    if vim.lsp.config[name] then
-                        vim.lsp.config[name].default_config = vim.tbl_deep_extend('force', vim.lsp.config[name].default_config or {}, server_opts)
-                    end
-                end
+        -- Setup each server defined in opts.servers
+        for name, server_opts in pairs(opts.servers or {}) do
+            -- Handle tsserver -> ts_ls rename
+            if name == 'tsserver' then
+                name = 'ts_ls'
             end
-        else
-            -- Fallback for older setups using the lspconfig module
-            local ok, lspconfig = pcall(require, 'lspconfig')
-            if not ok or not lspconfig then
-                return
-            end
-            for name, server_opts in pairs(opts.servers or {}) do
-                if name == 'tsserver' then
-                    name = 'ts_ls'
-                end
-                server_opts = server_opts or {}
-                do
-                    local server_on_attach = server_opts.on_attach
-                    if default_on_attach then
-                        server_opts.on_attach = function(client, bufnr)
-                            default_on_attach(client, bufnr)
-                            if type(server_on_attach) == 'function' then
-                                server_on_attach(client, bufnr)
-                            end
-                        end
-                    else
-                        server_opts.on_attach = server_on_attach
-                    end
-                end
 
-                local srv = lspconfig[name]
-                if srv and type(srv.setup) == 'function' then
-                    srv.setup(server_opts)
-                else
-                    local okc, configs = pcall(require, 'lspconfig.configs')
-                    if okc and configs and configs[name] then
-                        configs[name].default_config = vim.tbl_deep_extend('force', configs[name].default_config or {}, server_opts)
+            server_opts = server_opts or {}
+
+            -- Ensure per-server on_attach runs the default on_attach first
+            local server_on_attach = server_opts.on_attach
+            if default_on_attach then
+                server_opts.on_attach = function(client, bufnr)
+                    default_on_attach(client, bufnr)
+                    if type(server_on_attach) == 'function' then
+                        server_on_attach(client, bufnr)
                     end
                 end
+            elseif server_on_attach then
+                server_opts.on_attach = server_on_attach
+            end
+
+            -- Setup the LSP server using lspconfig
+            local srv = lspconfig[name]
+            if srv and type(srv.setup) == 'function' then
+                srv.setup(server_opts)
+            else
+                vim.notify(string.format('LSP server %s not found in lspconfig', name), vim.log.levels.WARN)
             end
         end
     end,

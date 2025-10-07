@@ -19,6 +19,7 @@ return {
       buf_map('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>')
       buf_map('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>')
       buf_map('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<CR>')
+      buf_map('n', '<F12>', '<cmd>lua vim.lsp.buf.rename()<CR>')
       buf_map('n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>')
       buf_map('n', '<A-S-f>', '<cmd>lua vim.lsp.buf.format({ async = true })<CR>')
 
