@@ -1,6 +1,42 @@
 return {
     'neovim/nvim-lspconfig',
     opts = {
+        -- Default on_attach to set buffer-local LSP keymaps
+        on_attach = function(client, bufnr)
+            -- Durable debug log to help diagnose missing mappings
+            local function log(msg)
+                local ok, f = pcall(io.open, '/tmp/nvim-lsp-debug.log', 'a')
+                if not ok or not f then return end
+                f:write(msg .. "\n")
+                f:close()
+            end
+
+            pcall(log, string.format('on_attach called: client=%s bufnr=%d', tostring(client and client.name or 'nil'), bufnr))
+
+            -- Use function-based, buffer-local mappings which are more reliable
+            local kb = vim.keymap
+            local opts = { noremap = true, silent = true, buffer = bufnr }
+
+            kb.set('n', 'gd', function() vim.lsp.buf.definition() end, vim.tbl_extend('force', opts, { desc = 'LSP: go to definition' }))
+            kb.set('n', 'gD', function() vim.lsp.buf.declaration() end, vim.tbl_extend('force', opts, { desc = 'LSP: go to declaration' }))
+            kb.set('n', 'gr', function() vim.lsp.buf.references() end, vim.tbl_extend('force', opts, { desc = 'LSP: references' }))
+            kb.set('n', 'K', function() vim.lsp.buf.hover() end, vim.tbl_extend('force', opts, { desc = 'LSP: hover' }))
+            kb.set('n', '<F2>', function() vim.lsp.buf.rename() end, vim.tbl_extend('force', opts, { desc = 'LSP: rename' }))
+            kb.set('n', '<leader>ca', function() vim.lsp.buf.code_action() end, vim.tbl_extend('force', opts, { desc = 'LSP: code action' }))
+            -- formatting: alt-shift-f can be unreliable in terminals, add a leader fallback
+            kb.set('n', '<A-S-f>', function() vim.lsp.buf.format({ async = true }) end, vim.tbl_extend('force', opts, { desc = 'LSP: format (alt-shift-f)' }))
+            kb.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, vim.tbl_extend('force', opts, { desc = 'LSP: format' }))
+
+            -- Log the actual buffer mappings for 'n' mode (helps confirm mappings exist)
+            pcall(function()
+                local maps = vim.api.nvim_buf_get_keymap(bufnr, 'n')
+                for _, m in ipairs(maps) do
+                    if m.lhs and (m.lhs == 'gd' or m.lhs == 'gD' or m.lhs == 'gr' or m.lhs == 'K' or m.lhs == '<F2>' or m.lhs == '<leader>ca' or m.lhs == '<leader>f') then
+                        log(string.format('map set: lhs=%s rhs=%s desc=%s', m.lhs, m.rhs or '<func>', tostring(m.desc)))
+                    end
+                end
+            end)
+        end,
         servers = {
             lua_ls = {
                 settings = {
@@ -57,11 +93,31 @@ return {
         -- Prefer the new API if available
         local use_new_api = vim and vim.lsp and vim.lsp.config
 
+        local default_on_attach = opts.on_attach
+
         if use_new_api then
             for name, server_opts in pairs(opts.servers or {}) do
                 if name == 'tsserver' then
                     name = 'ts_ls'
                 end
+
+                -- Ensure per-server on_attach runs the default on_attach first
+                server_opts = server_opts or {}
+                do
+                    local server_on_attach = server_opts.on_attach
+                    if default_on_attach then
+                        server_opts.on_attach = function(client, bufnr)
+                            default_on_attach(client, bufnr)
+                            if type(server_on_attach) == 'function' then
+                                server_on_attach(client, bufnr)
+                            end
+                        end
+                    else
+                        -- use server's own on_attach if present
+                        server_opts.on_attach = server_on_attach
+                    end
+                end
+
                 -- Register or setup using the new API
                 if vim.lsp.config[name] and type(vim.lsp.config[name].setup) == 'function' then
                     vim.lsp.config[name].setup(server_opts)
@@ -82,6 +138,21 @@ return {
                 if name == 'tsserver' then
                     name = 'ts_ls'
                 end
+                server_opts = server_opts or {}
+                do
+                    local server_on_attach = server_opts.on_attach
+                    if default_on_attach then
+                        server_opts.on_attach = function(client, bufnr)
+                            default_on_attach(client, bufnr)
+                            if type(server_on_attach) == 'function' then
+                                server_on_attach(client, bufnr)
+                            end
+                        end
+                    else
+                        server_opts.on_attach = server_on_attach
+                    end
+                end
+
                 local srv = lspconfig[name]
                 if srv and type(srv.setup) == 'function' then
                     srv.setup(server_opts)
