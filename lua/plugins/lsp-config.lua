@@ -47,17 +47,9 @@ return {
                 },
             },
             eslint = {
-                -- Defer requiring lspconfig.util until the plugin is loaded.
-                -- Use a function that returns the root_dir value at runtime.
-                root_dir = function()
-                    local ok, util = pcall(require, 'lspconfig.util')
-                    if not ok or not util or not util.root_pattern then
-                        -- Fallback: return a function that uses current working directory
-                        return function()
-                            return vim.loop.cwd()
-                        end
-                    end
-                    -- Return the root-finding function (do not call it here)
+                -- root_dir must be a function that takes filename and returns root path
+                root_dir = function(fname)
+                    local util = require('lspconfig.util')
                     return util.root_pattern(
                         '.eslintrc',
                         '.eslintrc.json',
@@ -67,7 +59,7 @@ return {
                         '.eslintrc.yml',
                         'eslint.config.js',
                         'package.json'
-                    )
+                    )(fname) or vim.loop.cwd()
                 end,
                 settings = {
                     workingDirectory = { mode = "auto" },
@@ -89,42 +81,77 @@ return {
         setup = nil,
     },
     config = function(_, opts)
-        local ok, lspconfig = pcall(require, 'lspconfig')
-        if not ok or not lspconfig then
-            vim.notify('lspconfig not found', vim.log.levels.ERROR)
-            return
-        end
+        -- Check if new API is available (Neovim 0.11+)
+        local use_new_api = vim.lsp.config ~= nil and vim.lsp.enable ~= nil
+        
+        if use_new_api then
+            -- Use new vim.lsp.config API (suppresses deprecation warning)
+            local default_on_attach = opts.on_attach
 
-        local default_on_attach = opts.on_attach
-
-        -- Setup each server defined in opts.servers
-        for name, server_opts in pairs(opts.servers or {}) do
-            -- Handle tsserver -> ts_ls rename
-            if name == 'tsserver' then
-                name = 'ts_ls'
-            end
-
-            server_opts = server_opts or {}
-
-            -- Ensure per-server on_attach runs the default on_attach first
-            local server_on_attach = server_opts.on_attach
-            if default_on_attach then
-                server_opts.on_attach = function(client, bufnr)
-                    default_on_attach(client, bufnr)
-                    if type(server_on_attach) == 'function' then
-                        server_on_attach(client, bufnr)
-                    end
+            for name, server_opts in pairs(opts.servers or {}) do
+                -- Handle tsserver -> ts_ls rename
+                if name == 'tsserver' then
+                    name = 'ts_ls'
                 end
-            elseif server_on_attach then
-                server_opts.on_attach = server_on_attach
+
+                server_opts = server_opts or {}
+
+                -- Ensure per-server on_attach runs the default on_attach first
+                local server_on_attach = server_opts.on_attach
+                if default_on_attach then
+                    server_opts.on_attach = function(client, bufnr)
+                        default_on_attach(client, bufnr)
+                        if type(server_on_attach) == 'function' then
+                            server_on_attach(client, bufnr)
+                        end
+                    end
+                elseif server_on_attach then
+                    server_opts.on_attach = server_on_attach
+                end
+
+                -- Configure and enable LSP server using new API
+                vim.lsp.config(name, server_opts)
+                vim.lsp.enable(name)
+            end
+        else
+            -- Use legacy lspconfig API for older Neovim versions
+            local ok, lspconfig = pcall(require, 'lspconfig')
+            if not ok or not lspconfig then
+                vim.notify('lspconfig not found', vim.log.levels.ERROR)
+                return
             end
 
-            -- Setup the LSP server using lspconfig
-            local srv = lspconfig[name]
-            if srv and type(srv.setup) == 'function' then
-                srv.setup(server_opts)
-            else
-                vim.notify(string.format('LSP server %s not found in lspconfig', name), vim.log.levels.WARN)
+            local default_on_attach = opts.on_attach
+
+            -- Setup each server defined in opts.servers
+            for name, server_opts in pairs(opts.servers or {}) do
+                -- Handle tsserver -> ts_ls rename
+                if name == 'tsserver' then
+                    name = 'ts_ls'
+                end
+
+                server_opts = server_opts or {}
+
+                -- Ensure per-server on_attach runs the default on_attach first
+                local server_on_attach = server_opts.on_attach
+                if default_on_attach then
+                    server_opts.on_attach = function(client, bufnr)
+                        default_on_attach(client, bufnr)
+                        if type(server_on_attach) == 'function' then
+                            server_on_attach(client, bufnr)
+                        end
+                    end
+                elseif server_on_attach then
+                    server_opts.on_attach = server_on_attach
+                end
+
+                -- Setup the LSP server using lspconfig
+                local srv = lspconfig[name]
+                if srv and type(srv.setup) == 'function' then
+                    srv.setup(server_opts)
+                else
+                    vim.notify(string.format('LSP server %s not found in lspconfig', name), vim.log.levels.WARN)
+                end
             end
         end
     end,
